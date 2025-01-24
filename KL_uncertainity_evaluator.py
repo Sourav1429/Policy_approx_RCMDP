@@ -6,40 +6,65 @@ Created on Sat Jan 18 14:00:27 2025
 """
 
 import numpy as np
-import torch
+from Machine_Rep import Machine_Replacement
 
 class Robust_pol_Kl_uncertainity:
-    def __init__(self,nS,nA,cost_list,init_dist):
+    def __init__(self,nS,nA,cost_list,init_dist,alpha):
         self.nS = nS
         self.nA = nA
         self.cost_list = cost_list
         self.init_dist = init_dist
         self.gamma = 0.995
+        self.alpha = alpha
     def calculate_infinite_Q(self,n,policy,P,C_KL):
         C = self.cost_list[n]
-        Q = torch.zeros((self.nS,self.nA),requires_grad=True)
-        V = torch.zeros(self.nS,requires_grad=True)
-        tau = 1000
+        Q = np.zeros((self.nS,self.nA))
+        V = np.zeros(self.nS)
+        tau = 500
         s = np.random.choice(self.nS,p=self.init_dist)
         for t in range(tau):
+            #print(policy[s])
             a = np.random.choice(self.nA,p = policy[s])
             next_state = np.random.choice(self.nS,p=P[a,s,:])
-            P_star = torch.tensor([P[a,s,i]*np.exp(V[i]/C_KL) for i in range(self.nS)],requires_grad = True)
-            Q[s,a] = C[s,a] + self.gamma * torch.mm(P_star,V)
-            V = torch.tensor([torch.dot(policy[s],Q[s,a]) for s in range(self.nS)],requires_grad=True)
+            #print("t=",self.t,a,s)
+            P_star = np.array([P[a,s,i]*np.exp(self.alpha*V[i]/C_KL) for i in range(self.nS)])
+            #print(P_star)
+            #print("P_satr:",P_star)
+            Q[s,a] = C[s,a] + self.gamma * np.dot(P_star,V)
+            V = np.array([np.dot(policy[s],Q[s,:]) for s in range(self.nS)])
+            #print("V=",V)
             s = next_state
         return Q,V
-    def evaluate_policy(self,policy,P,C_KL,n):
+    def evaluate_policy(self,policy,P,C_KL,n,t):
+        self.t = t
+        policy = np.array(policy)
         Q,V = self.calculate_infinite_Q(n, policy, P, C_KL)
-        P_star = torch.zeros((self.nS,self.nA,self.nS))
+        P_star = np.zeros((self.nS,self.nA,self.nS))
         #Pi_pi = torch.zeros((self.nS,self.nS,self.nA))
-        Q_ = torch.zeros((self.nS,self.nA))
+        Q_ = np.zeros((self.nS,self.nA))
+        T = np.zeros((self.nS,self.nS))
         for s in range(self.nS):
             for a in range(self.nA):
-                P_star[s,a,:] = torch.tensor([P(a,s,i)*np.exp(V[i]/C_KL) for i in range(self.nS)],requires_grad=True)
-                Q_[s,a] = self.cost_list[n][s,a] + self.gamma*torch.sum([P_star[s,a,s_next]*torch.sum([policy[s_next,a_next]*Q_[s_next,a_next] for a_next in range(self.nA)]) for s_next in range(self.nS)])#not correct
-        #inv = np.linalg.inv(np.eye(self.nS) - self.gamma*np.matmul(P_star,Pi_pi))
-        #Q_ = np.matmul(inv,self.cost_list[n])
-        J = torch.sum([self.init_dist[s]*torch.sum([policy[s,a]*Q_[s,a] for a in range(self.nA)]) for s in range(self.nS)])
-        return J
-        
+                P_star[s,a,:] = np.array([self.alpha*P[a,s,i]*np.exp(V[i]/C_KL) for i in range(self.nS)])
+                #Q_[s,a] = self.cost_list[n][s,a] + self.gamma*torch.sum([P_star[s,a,s_next]*torch.sum([policy[s_next,a_next]*Q_[s_next,a_next] for a_next in range(self.nA)]) for s_next in range(self.nS)])#not correct
+        for s in range(self.nS):
+            for s_next in range(self.nS):
+                T[s,s_next] = np.sum(np.array([policy[s,a]*P[a,s,s_next] for a in range(self.nA)]))
+        I = np.eye(self.nS)
+        Q_ = np.dot(np.linalg.inv(I-self.gamma*T),self.cost_list[n])
+        d_pi = np.matmul(np.linalg.inv(I-self.gamma*T),self.init_dist)
+        d_pi = d_pi/np.sum(d_pi)
+        #print("d_pi:",d_pi)
+        J = np.sum([self.init_dist[s]*np.sum([policy[s,a]*Q_[s,a] for a in range(self.nA)]) for s in range(self.nS)])
+        J_grad = np.array([d_pi[s]*np.array([Q_[s,a] for a in range(self.nA)]) for s in range(self.nS)])
+        return J,J_grad
+
+
+'''mr_obj = Machine_Replacement(0.7,0.4,2,2)
+cost_list = [mr_obj.gen_expected_reward(2),mr_obj.gen_expected_cost()]
+init_dist = np.array([1,0])
+rpe = Robust_pol_Kl_uncertainity(mr_obj.nS, mr_obj.nA, cost_list, init_dist)
+policy = np.array([[1,0],[0,1]])
+P = mr_obj.gen_probability()
+C_KL = 30000
+print(rpe.evaluate_policy(policy, P, C_KL, 0))'''

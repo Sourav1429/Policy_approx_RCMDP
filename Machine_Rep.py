@@ -81,10 +81,10 @@ class Machine_Replacement:
         else:
             print("Incorrect choice")
     def gen_expected_reward(self,ch=2):
-        self.R = np.zeros((self.nA,self.nS));
+        self.R = np.zeros((self.nS,self.nA));
         for i in range(self.nS):
-            self.R[0,i] = self.cost[i];
-            self.R[1,i] = self.rep_cost + self.cost[0];
+            self.R[i,0] = self.cost[i];
+            self.R[i,1] = self.rep_cost + self.cost[0];
         if(ch==0):
             return self.R
         elif(ch==1):
@@ -92,7 +92,7 @@ class Machine_Replacement:
         elif(ch==2):
             for s in range(self.nS):
                 for a in range(self.nA):
-                    self.R[a,s] = 1 - self.R[a,s]
+                    self.R[s,a] = 1 - self.R[s,a]
             return self.R
         else:
             print("Illegal choice")
@@ -103,10 +103,10 @@ class Machine_Replacement:
             self.C[1,i] = np.ones(self.nS)*(self.safety_cost + self.cost[0]);
         return self.C;
     def gen_expected_cost(self):
-        self.C = np.zeros((self.nA,self.nS));
+        self.C = np.zeros((self.nS,self.nA));
         for i in range(self.nS):
-            self.C[0,i] = self.cost[i];
-            self.C[1,i] = self.safety_cost + self.cost[0];
+            self.C[i,0] = self.cost[i];
+            self.C[i,1] = self.safety_cost + self.cost[0];
         return self.C;
     
 class MachineReplacementEnv(gym.Env):
