@@ -11,15 +11,15 @@ from matplotlib import pyplot as plt
 vf_list = []
 cf_list = []
 
-with open("Store_robust_vf_Garnet","rb") as f:
+with open("Store_robust_vf_Garnet_15_20","rb") as f:
     vf_list = pickle.load(f)
 f.close()
 vf_list.insert(0,0)
 
-with open("Store_robust_cf_Garnet","rb") as f:
+with open("Store_robust_cf_Garnet_15_20","rb") as f:
     cf_list = pickle.load(f)
 f.close()
-cf_list.insert(1,175)
+cf_list.insert(1,0)
 b= 50
 t = 1000
 epsilon = 0.01
@@ -35,7 +35,7 @@ plt.plot(cf_list)
 plt.plot(np.ones(t)*b)
 plt.xlabel('Iteration')
 plt.ylabel('VF,CF,Baeline')
-plt.title("Reward based setting where constraint to be above baseline(GARNET setting)")
-plt.savefig('Projected_RCMDP.pdf')
+plt.title("Reward based setting where constraint to be above baseline(GARNET setting nS=15,nA=20)")
+plt.savefig('Projected_RCMDP_garnet_15_20.pdf')
 plt.legend(['R_vf','R_constraintf','Baseline'])
 plt.show()

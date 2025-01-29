@@ -33,7 +33,7 @@ def Proj(policy,V,grad,ch=0):
     #input()
     return policy
     
-nS, nA = 6,2
+nS, nA = 15,20
 env = Garnet(nS, nA)
 alpha = 0.000001
 exp=0
@@ -78,14 +78,14 @@ for t in range(T):
     #print("One step done")
 #print(np.argmax(store))
 print(count)
-with open("Store_robust_output_garnrt","wb") as f:
+with open("Store_robust_output_garnet_15_20","wb") as f:
     pickle.dump(store,f)
 f.close()
 
-with open("Store_robust_vf_garnet","wb") as f:
+with open("Store_robust_vf_garnet_15_20","wb") as f:
     pickle.dump(vf_store,f)
 f.close()
 
-with open("Store_robust_cf_garnet","wb") as f:
+with open("Store_robust_cf_garnet_15_20","wb") as f:
     pickle.dump(cf_store,f)
 f.close()
