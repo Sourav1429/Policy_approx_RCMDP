@@ -9,7 +9,7 @@ import numpy as np
 from Machine_Rep import Machine_Replacement
 
 class Robust_pol_Kl_uncertainity:
-    def __init__(self,nS,nA,cost_list,init_dist,alpha):
+    def __init__(self,nS,nA,cost_list,init_dist,alpha=1):
         self.nS = nS
         self.nA = nA
         self.cost_list = cost_list
@@ -20,7 +20,7 @@ class Robust_pol_Kl_uncertainity:
         C = self.cost_list[n]
         Q = np.zeros((self.nS,self.nA))
         V = np.zeros(self.nS)
-        tau = 500
+        tau = 1000
         s = np.random.choice(self.nS,p=self.init_dist)
         for t in range(tau):
             #print(policy[s])
@@ -60,11 +60,12 @@ class Robust_pol_Kl_uncertainity:
         return J,J_grad
 
 
-'''mr_obj = Machine_Replacement(0.7,0.4,2,2)
+'''mr_obj = Machine_Replacement()
+nS,nA = mr_obj.nS,mr_obj.nA
 cost_list = [mr_obj.gen_expected_reward(2),mr_obj.gen_expected_cost()]
-init_dist = np.array([1,0])
+init_dist = np.array([0.8,0.04,0.05,0.11])
 rpe = Robust_pol_Kl_uncertainity(mr_obj.nS, mr_obj.nA, cost_list, init_dist)
-policy = np.array([[1,0],[0,1]])
+policy = np.ones((nS,nA))*0.5
 P = mr_obj.gen_probability()
-C_KL = 30000
-print(rpe.evaluate_policy(policy, P, C_KL, 0))'''
+C_KL = 0.05
+print(rpe.evaluate_policy(policy, P, C_KL, 1,0))'''

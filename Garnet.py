@@ -20,14 +20,21 @@ class Garnet:
         return self.P
        
     def gen_expected_reward(self):
-        self.R = np.zeros((self.nA,self.nS))
+        self.R = np.zeros((self.nS,self.nA))
         for s in range(self.nS):
             for a in range(self.nA):
                 mu,sigma = np.random.uniform(0,10),np.random.uniform(0,10)
-                self.R[a,s] = np.random.normal(mu,sigma)/10
+                self.R[s,a] = np.random.normal(mu,sigma)/10
         return self.R
-nS,nA = 3,2
+    def gen_expected_constraint(self):
+        self.R = np.zeros((self.nS,self.nA))
+        for s in range(self.nS):
+            for a in range(self.nA):
+                mu,sigma = np.random.uniform(0,10),np.random.uniform(0,10)
+                self.R[s,a] = np.random.normal(mu,sigma)/10
+        return self.R
+'''nS,nA = 3,2
 env = Garnet(nS,nA)
 print(env.gen_nominal_prob())
 print("=======")
-print(env.gen_expected_reward())
+print(env.gen_expected_reward())'''

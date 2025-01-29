@@ -102,11 +102,13 @@ class Machine_Replacement:
             self.C[0,i] = np.ones(self.nS)*self.cost[i];
             self.C[1,i] = np.ones(self.nS)*(self.safety_cost + self.cost[0]);
         return self.C;
-    def gen_expected_cost(self):
+    def gen_expected_cost(self,exp=1):
         self.C = np.zeros((self.nS,self.nA));
         for i in range(self.nS):
             self.C[i,0] = self.cost[i];
             self.C[i,1] = self.safety_cost + self.cost[0];
+        if(exp==0):
+            self.C = self.gen_expected_reward()
         return self.C;
     
 class MachineReplacementEnv(gym.Env):
