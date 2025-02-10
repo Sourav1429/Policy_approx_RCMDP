@@ -65,7 +65,7 @@ class Epi_RC:
             pol = self.Proj(pol,V,g)
         return pol
     def main_algo(self):
-        K = 100
+        K = 1000
         low = 0
         upper = int(1/(1-self.discount))
         pol = None
