@@ -9,6 +9,7 @@ import numpy as np
 import pickle
 from KL_uncertainity_evaluator import Robust_pol_Kl_uncertainity
 from Machine_Rep import Machine_Replacement
+import time
 class Epi_RC:
     def __init__(self,env,P,T,C_KL,cost_list,b_constraint,discount,env_nm):
         self.nS = env.nS
@@ -91,12 +92,12 @@ class Epi_RC:
                 low = low
                 upper = b
             #input()
-        with open("Epi_RC_objective_"+self.env_nm,"wb") as f:
+        '''with open("Epi_RC_objective_"+self.env_nm,"wb") as f:
             pickle.dump(self.objective_list,f)
         f.close()
         with open("Epi_RC_constrainte_"+self.env_nm,"wb") as f:
             pickle.dump(self.constraint_list,f)
-        f.close()
+        f.close()'''
         return pol
 #nS, nA = 6,2
 env = Machine_Replacement()
@@ -104,12 +105,14 @@ ch,exp = 0,0
 P,R,C = env.gen_probability(),env.gen_expected_reward(ch),env.gen_expected_cost(exp)
 b_constraint = 25
 cost_list = [R,C]
-discount = 0.995
+discount = 0.9
 env_nm = "MR_4s_2a"
 T = 10
 C_KL = 0.1
 model = Epi_RC(env, P, T, C_KL, cost_list, b_constraint, discount, env_nm)
-fin_pol  = model.main_algo()          
+start_tm = time.time()
+fin_pol  = model.main_algo()
+print("Execution time:",time.time()-start_tm )          
 print("All files saved. Training complete")
 print(fin_pol)
             

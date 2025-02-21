@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jan 18 13:53:04 2025
+Created on Thu Feb 20 15:43:03 2025
 
 @author: Sourav
 """
-
 import numpy as np
-from Machine_Rep import Machine_Replacement
 from KL_uncertainity_evaluator import Robust_pol_Kl_uncertainity
-#import torch
+from Machine_Rep import Machine_Replacement
 import pickle
-import time
 
 def onehot(policy_space,nS,nA):
     ret_pol = []
@@ -40,7 +37,7 @@ def Proj(policy,V,Pi,grad,ch=0):
     #print(policy)
     #input()
     return policy
-    
+
 mr_obj = Machine_Replacement()
 ch = 0
 alpha = 0.001
@@ -52,10 +49,9 @@ init_dist = np.array([0.8,0.04,0.05,0.11])
 pol_eval = Robust_pol_Kl_uncertainity(nS, nA, cost_list, init_dist,alpha)
 C_KL = 0.05 # what will be this parameter
 store=[]
-eps = 0.01
+lambda_ = 100
 b = 30
 
-#####Remember to convert policy to one_hot encoding
 policy_space= []
 n_pol = np.power(nA,nS)
 vf_store = []
@@ -68,16 +64,20 @@ choice_of_policy = np.random.choice(len(policy_space))
 policy = policy_space[choice_of_policy]
 store_pol = []
 #print(policy_space)
+
 with open("nominal_model","rb") as f:
     P_nominal = pickle.load(f)
 f.close()
 T = 1000
 count = 0;
-start_time = time.time()
+
 for t in range(T):
     Vr,gradr = pol_eval.evaluate_policy(policy, P_nominal, C_KL, 0,t)
     Vc,gradc = pol_eval.evaluate_policy(policy, P_nominal, C_KL, 1,t)
-    if(Vc < b - eps):
+    
+    ch = np.argmax([Vr/lambda_,(Vc-b)])
+    
+    if(ch==0):
         policy = Proj(policy,Vr,policy_space,gradr) ##define this
     else:
         count+=1
@@ -89,16 +89,15 @@ for t in range(T):
     store_pol.append(policy)
     #print("One step done")
 #print(np.argmax(store))
-print("Execution time:",time.time()-start_time," secs")
-'''print(count)
-with open("Store_robust_output_cost","wb") as f:
+print(count)
+with open("Store_robust_output_cost_new_format","wb") as f:
     pickle.dump(store,f)
 f.close()
 
-with open("Store_robust_vf_cost","wb") as f:
+with open("Store_robust_vf_cost_new_format","wb") as f:
     pickle.dump(vf_store,f)
 f.close()
 
-with open("Store_robust_cf_cost","wb") as f:
+with open("Store_robust_cf_cost_new_format","wb") as f:
     pickle.dump(cf_store,f)
-f.close()'''
+f.close()

@@ -45,7 +45,7 @@ class Robust_pol_Kl_uncertainity:
         T = np.zeros((self.nS,self.nS))
         for s in range(self.nS):
             for a in range(self.nA):
-                P_star[s,a,:] = np.array([self.alpha*P[a,s,i]*np.exp(V[i]/C_KL) for i in range(self.nS)])
+                P_star[s,a,:] = np.array([self.alpha*P_star[s,a,i]*np.exp(V[i]/C_KL) for i in range(self.nS)])
                 #Q_[s,a] = self.cost_list[n][s,a] + self.gamma*torch.sum([P_star[s,a,s_next]*torch.sum([policy[s_next,a_next]*Q_[s_next,a_next] for a_next in range(self.nA)]) for s_next in range(self.nS)])#not correct
         for s in range(self.nS):
             for s_next in range(self.nS):

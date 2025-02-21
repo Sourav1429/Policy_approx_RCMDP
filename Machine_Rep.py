@@ -30,9 +30,9 @@ class River_swim:
         self.R[0,0,:] = 0.01
         self.R[1,self.nS-1,:] = 1
     def gen_expected_reward(self):
-        self.R = np.zeros((self.nA,self.nS))
-        self.R[0,0] = 0.01
-        self.R[1,self.nS-1] = 1
+        self.R = np.zeros((self.nS,self.nA))
+        self.R[0,0] = 0.1
+        self.R[self.nS-1,1] = 1
         return self.R
     def gen_cost(self):
         self.C = np.zeros((self.nA,self.nS,self.nS))
@@ -40,9 +40,9 @@ class River_swim:
             self.C[:,s,:] = s/10
         return self.C
     def gen_expected_cost(self):
-        self.C = np.zeros((self.nA,self.nS))
+        self.C = np.zeros((self.nS,self.nA))
         for s in range(self.nS):
-            self.C[:,s] = s/10
+            self.C[s,:] = s/20
         return self.C
 
 class Machine_Replacement:

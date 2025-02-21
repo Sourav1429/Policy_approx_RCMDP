@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jan 18 13:53:04 2025
+Created on Wed Feb 12 14:20:48 2025
 
 @author: Sourav
 """
 
 import numpy as np
-from Machine_Rep import Machine_Replacement
+from Machine_Rep import River_swim
 from KL_uncertainity_evaluator import Robust_pol_Kl_uncertainity
 #import torch
 import pickle
-import time
 
 def onehot(policy_space,nS,nA):
     ret_pol = []
@@ -21,13 +20,13 @@ def onehot(policy_space,nS,nA):
         ret_pol.append(policy)
     return np.array(ret_pol,dtype=np.int16)
 
-def Proj(policy,V,Pi,grad,ch=0):
-    alpha = 0.1
+def Proj(policy,V,grad,ch=0):
+    alpha = 0.11
     #print(grad)
     if(ch==0):
-        policy = policy - alpha* grad
+        policy = (1-alpha)*policy + alpha* grad
     else:
-        policy = policy - alpha*grad
+        policy = (1-alpha)*policy - alpha*grad
     #smallest_distance = np.argmin([np.linalg.norm(policy-pi) for pi in Pi])
     nS,nA = policy.shape
     #print(np.any(policy<0))
@@ -37,51 +36,53 @@ def Proj(policy,V,Pi,grad,ch=0):
     #print("After change:",policy)
     for s in range(nS):
         policy[s] = policy[s]/np.sum(policy[s])
-    #print(policy)
+    #print("Ne_pol_in_function,",policy)
     #input()
     return policy
-    
-mr_obj = Machine_Replacement()
-ch = 0
+
+env = River_swim()
 alpha = 0.001
 exp=0
-P,R,C = mr_obj.gen_probability(),mr_obj.gen_expected_reward(ch),mr_obj.gen_expected_cost(exp)
-nS,nA = mr_obj.nS,mr_obj.nA
+nS,nA = env.nS,env.nA
+P,R,C = env.gen_probability(),env.gen_expected_reward(),env.gen_expected_cost()
 cost_list = [R,C]
-init_dist = np.array([0.8,0.04,0.05,0.11])
+np.random.seed(1)
+init_dist = np.random.normal(loc = 1,scale=2,size=nS)
+init_dist = np.exp(init_dist)
+init_dist = init_dist/np.sum(init_dist)
 pol_eval = Robust_pol_Kl_uncertainity(nS, nA, cost_list, init_dist,alpha)
-C_KL = 0.05 # what will be this parameter
+C_KL = 1 # what will be this parameter
 store=[]
 eps = 0.01
-b = 30
+b = 40
 
 #####Remember to convert policy to one_hot encoding
-policy_space= []
-n_pol = np.power(nA,nS)
 vf_store = []
 cf_store = []
-for i in range(1,n_pol):
-    policy_space.append(list(map(int,format(i, '04b'))))
-policy_space = np.array(policy_space)
-policy_space = onehot(policy_space,nS,nA)
-choice_of_policy = np.random.choice(len(policy_space))
-policy = policy_space[choice_of_policy]
+
+policy = np.zeros((nS,nA))
+for s in range(nS):
+    policy[s,0] = np.random.random()
+    policy[s,1] = 1 - policy[s,0]
+#print(policy)
 store_pol = []
 #print(policy_space)
-with open("nominal_model","rb") as f:
-    P_nominal = pickle.load(f)
-f.close()
+
+#f.close()
 T = 1000
 count = 0;
-start_time = time.time()
+
 for t in range(T):
-    Vr,gradr = pol_eval.evaluate_policy(policy, P_nominal, C_KL, 0,t)
-    Vc,gradc = pol_eval.evaluate_policy(policy, P_nominal, C_KL, 1,t)
-    if(Vc < b - eps):
-        policy = Proj(policy,Vr,policy_space,gradr) ##define this
+    Vr,gradr = pol_eval.evaluate_policy(policy, P, C_KL, 0,t)
+    Vc,gradc = pol_eval.evaluate_policy(policy, P, C_KL, 1,t)
+    #print(Vc)
+    #print(gradc)
+    #input()
+    if(Vc <  b - eps):
+        policy = Proj(policy,Vr,gradr) ##define this
     else:
         count+=1
-        policy = Proj(policy,Vc,policy_space,gradc,1)
+        policy = Proj(policy,Vc,gradc,1)
     #print("New policy:",policy)
     #store.append(np.min(Vr,-np.clip((b-Vc),0,np.inf)))
     vf_store.append(Vr)
@@ -89,16 +90,18 @@ for t in range(T):
     store_pol.append(policy)
     #print("One step done")
 #print(np.argmax(store))
-print("Execution time:",time.time()-start_time," secs")
-'''print(count)
-with open("Store_robust_output_cost","wb") as f:
+print(count)
+with open("Store_robust_output_RS_new_way","wb") as f:
     pickle.dump(store,f)
 f.close()
 
-with open("Store_robust_vf_cost","wb") as f:
+with open("Policy_stored_robust_output_RS_new_way","wb") as f:
+    pickle.dump(store_pol,f)
+f.close()
+with open("Store_robust_vf_RS_new_way","wb") as f:
     pickle.dump(vf_store,f)
 f.close()
 
-with open("Store_robust_cf_cost","wb") as f:
+with open("Store_robust_cf_RS_new_way","wb") as f:
     pickle.dump(cf_store,f)
-f.close()'''
+f.close()
