@@ -85,12 +85,14 @@ class Epi_RC:
             #print(Vc-self.b_constraint)
             del_k = np.max([b-Vr,Vc-self.b_constraint])
             #print(del_k)
-            if(del_k>0):
+            if(del_k>self.eps):
                 low = b;
                 upper = upper;
-            else:
+            elif(del_k<self.eps):
                 low = low
                 upper = b
+            else:
+                return pol
             #input()
         '''with open("Epi_RC_objective_"+self.env_nm,"wb") as f:
             pickle.dump(self.objective_list,f)
